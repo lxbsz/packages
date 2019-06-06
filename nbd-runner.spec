@@ -20,8 +20,8 @@
 Name:          nbd-runner
 Summary:       A daemon that handles the NBD device's IO requests in server side
 License:       LGPLv2+
-Version:       0.3
-Release:       1%{?dist}
+Version:       0.4
+Release:       0%{?dist}
 URL:           https://github.com/gluster/nbd-runner.git
 
 Source0:       https://github.com/gluster/%{name}/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -46,16 +46,12 @@ Requires:      json-c
 Requires:      rsyslog
 
 %if ( 0%{!?_without_gluster:1} )
-%package gluster-handler
-Summary:       Gluster back-store handler
 BuildRequires: glusterfs-api-devel
 Requires:      glusterfs-api
 Requires:      %{name} = %{version}-%{release}
 %endif
 
 %if ( 0%{!?_without_azblk:1} )
-%package azblk-handler
-Summary:       Azblk back-store handler
 BuildRequires: libcurl-devel
 BuildRequires: libuv-devel
 %endif
@@ -68,7 +64,10 @@ back-store.
 %autosetup -p 1
 
 %build
+echo v%{version}-%{release} > VERSION
 ./autogen.sh
+export CFLAGS="%build_cflags -fPIC"
+export CPPFLAGS="%build_cxxflags -fPIC"
 %configure %{?_without_tirpc} %{?_without_gluster} %{?_without_azblk}
 %make_build
 
@@ -98,25 +97,15 @@ find %{buildroot}%{_libdir}/nbd-runner/ -name '*.la' -delete
 %ghost %attr(0600,-,-) %{_localstatedir}/log/nbd-runner/nbd-runner-glfs.log
 
 %if ( 0%{!?_without_gluster:1} )
-%description gluster-handler
-Gluster backend handler for processing IO requests from the NBD device.
-
-%files gluster-handler
 %dir %{_libdir}/nbd-runner/
-%license COPYING-GPLV2 COPYING-LGPLV3
 %{_libdir}/nbd-runner/libgluster_handler.so
 %endif
 
 %if ( 0%{!?_without_azblk:1} )
-%description azblk-handler
-Azblk backend handler for processing IO requests from the NBD device.
-
-%files azblk-handler
 %dir %{_libdir}/nbd-runner/
-%license COPYING-GPLV2 COPYING-LGPLV3
 %{_libdir}/nbd-runner/libazblk_handler.so
 %endif
 
 %changelog
-* Wed Apr 24 2019 Xiubo Li <xiubli@redhat.com> - 0.3-1
+* Wed Apr 24 2019 Xiubo Li <xiubli@redhat.com> - 0.4-0
 - Initial package
